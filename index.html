@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>SkyShort</title>
+    <script src="https://siasky.net/_AAvkExtVPQwbpfKxRlnLAe5-iXV_tQKp9GfUCf1Ajsxuw/index.js"></script>
+    <script src="https://siasky.net/_AAnblJDpo1aB9bjN5VFsZUTPBasmujkcQuiEDibAO6rQQ"></script>
+    <script>
+
+      //THESE VALUES SHOULD BE MODIFIED FOR YOUR LIKING!!!
+      const client = new skynet.SkynetClient("https://siasky.net"); //siasky portal by default, feel free to change
+      const dataKey = "SkyShort"; //enter your game name here if you want - shouldn't be any issues leaving it as is, though
+
+      //GENERIC, CAN BE IGNORED
+      const contentRecord = new contentrecord.ContentRecordDAC(); //makes contentrecord is accessable through contentrecord.*
+      var revisions = 9223372036854775807; //revision number, gets added on every revision in the revision function
+      var random = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5).toUpperCase();
+      if (document.location.toString().includes("#")){
+        random = document.location.toString().split('#')[1];
+        tryLink();
+      } else {
+
+      }
+
+      /*async function getJSON(_friendsPublicKey) { //retrieve slow data from skydb, any amount of data is fine
+        /*var friendID = document.getElementById("reciever").value;
+        console.log("trying to read data from: " + friendID);
+        var _inputField = document.getElementById("recievedData");*/
+          /*try {
+            const { data, skylink } = await client.db.getJSON(_friendsPublicKey, dataKey); //gets data and skylink from skyDB
+            _inputField.value = data.example;
+            mySkyFunc(skylink); //adds the skylink to the contentrecord through the mysky function
+          } catch (error) {
+            console.log(error);
+          }
+      }*/
+      /*async function setJSON(_data) { //set slow data, any amount of data is fine
+        //var data = document.getElementById("inputData").value;
+        const json = { example: skynet.stringToUint8ArrayUtf8(_data) };
+        console.log("sending slow data: " + json.example);
+        setEntry(data);
+          try {
+            await client.db.setJSON(privateKey, dataKey, json);
+          } catch (error) {
+            console.log(error);
+          }
+        console.log("sent slow data: " + json.example);
+      }*/
+      async function setLink(_data){ //fast data(should be obsolete soon, just a workaround), don't send more than 70 bytes
+        var revision = BigInt(revisions);
+        var data = skynet.stringToUint8ArrayUtf8(_data);
+        revisions++;
+        const entry = { dataKey, data, revision };
+        try {
+          await client.registry.setEntry(privateKey, entry);
+        } catch (error) {
+          console.log(error);
+        }
+        console.log("sent fast data");
+      }
+      async function tryLink(){
+        const { publicKey, privateKey, seed } = skynet.genKeyPairFromSeed(random);
+        try {
+          const { entry, signature } = await client.registry.getEntry(publicKey, dataKey);
+          document.location = skynet.uint8ArrayToStringUtf8(entry.data);
+          //window.open(skynet.uint8ArrayToStringUtf8(entry.data), '_blank');
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      async function getLink(){
+        var input = document.createElement("input");
+        input.setAttribute('type', 'text');
+        var random = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5).toUpperCase();
+        input.value = document.location + "#" + random;
+        document.body.appendChild(input);
+
+        const { publicKey, privateKey, seed } = skynet.genKeyPairFromSeed(random);
+
+        var revision = BigInt(revisions);
+        var data = skynet.stringToUint8ArrayUtf8(document.getElementById("link").value);
+        const entry = { dataKey, data, revision };
+        try {
+          await client.registry.setEntry(privateKey, entry);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <script>document.querySelector("body").style.backgroundColor = "#131313";</script>
+    <input id="link" type="text" value="Enter link ...">
+    <button id="getLink" onClick="getLink()">Get Short URL</button>
+  </body>
+</html>
